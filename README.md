@@ -99,7 +99,7 @@ interpret, compile and run the code. Check the embedded documentation in
 ---PolyVinalDistillate---
 
 The PSoC Example project initialises with the core.zf definitions which are
-stored in a const char in zForth.c. zForth can be interacted with via a terminal
+stored in a `const char` in zForth.c. zForth can be interacted with via a terminal
 application connected to the USB UART.
 
 The main modifications to the original source code are that `zf_eval()` now takes
@@ -131,7 +131,10 @@ void main()
             nInputBytes = SOURCE_GetBytes(pInputBuf);   //Fill buffer from some source
             pBufPos = pInputBuf;                        //Set buffer pointer to start
         }
-        
+        //NOTE: It is possible that no more bytes are available from the source.
+        //In this case, nInputBytes will still be equal to 0, after the above 'if'
+        //and zf_Main_Update_Fxn will be called with nBytes = 0. This is as intended.		
+		
         nBytes = nInputBytes;                                  //Bytes available
         zf_result r = zf_Main_Update_Fxn(pBufPos, &nBytes);    //Feed data to zForth.
         nInputBytes -= nBytes;                                 //Bytes used subtracted
