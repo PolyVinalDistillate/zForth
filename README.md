@@ -2,6 +2,21 @@
 ![zForth](/zforth.png)
 ![zForth](/PVD.png)
 
+Nick's Foreword
+===============
+
+Firstly, this is the version modified by PolyVinalDistillate for use on the 
+PSoC 5. If you want a version that's likely to see better up-keep, please 
+find zevv's excellent original at https://github.com/zevv/zForth.
+
+Secondly and more importantly, Thanks zevv for the excellent work :D I've
+never tried programming in Forth, but having found your repository while
+looking for a viable embeddable scripting language, I think I may come to
+rather like it!
+
+Finally, the remainder of this document has some modifications to bring it
+in line with my modifications to the source code.
+
 zForth
 ======
 
