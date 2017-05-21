@@ -1123,7 +1123,7 @@ zf_result zf_Main_Update_Fxn(unsigned char* pBuf, unsigned short* nLen)
                         Build[l++] = chr;
                         Build[l] = '\0';
                         *nLen = nIndex+1;
-                        if(l == sizeof(Build)-1)
+                        if(l == sizeof(Build)-2)
                             (*nLen) --;
             			rv = zf_eval(Build, 1);
             			l = 0;
