@@ -115,17 +115,16 @@ required. Typical use case is shown below:
 ```
 void main()
 {
-	zf_init(0);					//Standard init
-	zf_bootstrap();				//Standard bootstrap
-	zf_eval(ZF_CORE_STR, 0);	//Load core definitions from const string
-	
+    zf_init(0);                 //Standard init
+    zf_bootstrap();             //Standard bootstrap
+    zf_eval(ZF_CORE_STR, 0);    //Load core definitions from const string
+
     int nInputBytes = 0;
     unsigned short nBytes = nInputBytes;
     unsigned char pInputBuf[64];
     unsigned char* pBufPos = pInputBuf;
-	for(;;) 
+    for(;;) 
     {        
-        
         if(nInputBytes <= 0)                            //If there are no bytes...
         {
             nInputBytes = SOURCE_GetBytes(pInputBuf);   //Fill buffer from some source
@@ -133,8 +132,8 @@ void main()
         }
         //NOTE: It is possible that no more bytes are available from the source.
         //In this case, nInputBytes will still be equal to 0, after the above 'if'
-        //and zf_Main_Update_Fxn will be called with nBytes = 0. This is as intended.		
-		
+        //and zf_Main_Update_Fxn will be called with nBytes = 0. This is as intended.
+
         nBytes = nInputBytes;                                  //Bytes available
         zf_result r = zf_Main_Update_Fxn(pBufPos, &nBytes);    //Feed data to zForth.
         nInputBytes -= nBytes;                                 //Bytes used subtracted
@@ -146,7 +145,7 @@ void main()
         /*
         Perform other system functions unrelated to Forth
         */
-    }		
+    }
 }
 ```
 
