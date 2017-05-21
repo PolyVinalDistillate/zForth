@@ -82,7 +82,7 @@ Source layout
 ```
 ./forth                   : core zforth library and various snippets and examples
 ./src/zforth              : zforth core source; embed these into your program
-./src/PSoC5 with USBUART  : CY8CKIT-059 PSoC Creator project using USBUART
+./src/PSoC zForth         : CY8CKIT-059 PSoC Creator project using USBUART
 
 ```
 
