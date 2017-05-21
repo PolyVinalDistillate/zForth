@@ -3,8 +3,10 @@
 
 #include "zfconf.h"
 
-/* Abort reasons */
+//Sample core definitions for higher-level functionality (added by Nick(PolyVinalDistillate)) - contained in .c file
+extern const char ZF_CORE_STR[];
 
+/* Abort reasons */   
 typedef enum {
 	ZF_OK,
 	ZF_ABORT_INTERNAL_ERROR,
@@ -15,7 +17,8 @@ typedef enum {
 	ZF_ABORT_RSTACK_OVERRUN,
 	ZF_ABORT_NOT_A_WORD,
 	ZF_ABORT_COMPILE_ONLY_WORD,
-	ZF_ABORT_INVALID_SIZE
+	ZF_ABORT_INVALID_SIZE,
+    ZF_NICKS_RERUN_FLAG			//Extra flag used to indicate when inner interpreter needs re-invoked
 } zf_result;
 
 typedef enum {
@@ -45,11 +48,22 @@ typedef enum {
 
 /* ZForth API functions */
 
+//Main update function added by Nick(PolyVinalDistillate). Wraps zf_ReRun and zf_eval for implementing a one-word-at-a-time
+//execution system. Send data in through pBuf and specify length in nLen. nLen will be modified to indicate
+//the number of bytes actually read from pBuf such that the next entry can supply pBuf+nLen as the buffer
+//pointer.
+zf_result zf_Main_Update_Fxn(unsigned char* pBuf, unsigned short* nLen);
+
+
+//Modified by Nick(PolyVinalDistillate). If bEnableThrottle = 0, then zf_eval will not exit until entire input processed. NOTE: This includes 
+//forth loops! If bEnableThrottle = 1, then function will exit once first word is processed. subsequently, zf_ReRun() should be called repeatedly 
+//until it returns ZF_OK, indicating end of processing of current words. This is handled in the "zf_Main_Update_Fxn()" if run as shown in 
+//the PSoC folder's main.c, however zf_eval() can still be used with bEnableThrottle = 0 and will then behave as it did before.
+zf_result zf_eval(const char *buf, int bEnableThrottle);
 
 void zf_init(int trace);
 void zf_bootstrap(void);
 void *zf_dump(size_t *len);
-zf_result zf_eval(const char *buf);
 void zf_abort(zf_result reason);
 
 void zf_push(zf_cell v);
@@ -59,7 +73,7 @@ zf_cell zf_pick(zf_addr n);
 /* Host provides these functions */
 
 zf_input_state zf_host_sys(zf_syscall_id id, const char *last_word);
-void zf_host_trace(const char *fmt, va_list va);
+//void zf_host_trace(const char *fmt, va_list va);
 zf_cell zf_host_parse_num(const char *buf);
 
 #endif

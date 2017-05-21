@@ -1,4 +1,8 @@
-
+/*
+Following file has been messed about with a bit by Nick (PolyVinalDistillate). Modifications are labelled, and the original programmer should 
+NOT receive any shaming for my dreadful code! I've also messed with the bracket layout in some functions while fubling about to try and figure
+out what's going on!
+*/
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
@@ -8,6 +12,8 @@
 
 #include "zforth.h"
 
+//Core definitions for higher-level functionality (added by Nick (PolyVinalDistillate)) from the file "core.zf" in the "zForth/forth" folder
+const char ZF_CORE_STR[] = {": emit 0 sys ; : . 1 sys ; : tell 2 sys ; : ! 0 !! ; : @ 0 @@ ; : , 0 ,, ; : # 0 ## ; : [ 0 compiling ! ; immediate : ] 1 compiling ! ; : postpone 1 _postpone ! ; immediate : over 1 pick ; : +! dup @ rot + swap ! ; : inc 1 swap +! ; : dec -1 swap +! ; : < - <0 ; : > swap < ; : <= over over >r >r < r> r> = + ; : >= swap <= ; : =0 0 = ; : not =0 ; : != = not ; : cr 10 emit ; : .. dup . ; : here h @ ; : allot h +! ; : var : postpone [ ' lit , here dup 5 + , ' exit , here swap ! 5 allot ; : begin here ; immediate : again ' jmp , , ; immediate : until ' jmp0 , , ; immediate : times ' 1 - , ' dup , ' =0 , postpone until ; immediate : if ' jmp0 , here 999 , ; immediate : unless ' not , postpone if ; immediate : else ' jmp , here 999 , swap here swap ! ; immediate : fi here swap ! ; immediate : i ' lit , 0 , ' pickr , ; immediate : j ' lit , 3 , ' pickr , ; immediate : do ' swap , ' >r , ' >r , here ; immediate : loop+ ' r> , ' + , ' dup , ' >r , ' lit , 1 , ' pickr , ' > , ' jmp0 , , ' r> , ' drop , ' r> , ' drop , ; immediate : loop ' lit , 1 , postpone loop+ ; immediate : s\" compiling @ if ' lits , here 0 , fi here begin key dup 34 = if drop compiling @ if here swap - swap ! else dup here swap - fi exit else , fi again ; immediate : .\" compiling @ if postpone s\" ' tell , else begin key dup 34 = if drop exit else emit fi again fi ; immediate"};    
 
 /* Flags and length encoded in words */
 
@@ -145,6 +151,56 @@ static const char *op_name(zf_addr addr)
 #define trace(...) {}
 #endif
 
+
+//Nick's addition (PolyVinalDistillate) - parse numeric value. Supports int / float depending on zf_cell type.
+//This was written to avoid using the standard float libraries. It also has the benefit of automatically supporting
+//integer *or* floating point numbers according to the zf_cell type, so it seemed a good fit to put it in this file.
+zf_cell zf_host_parse_num(const char *buf)
+{
+    zf_cell var = 0;
+    long nDiv = 1;
+    int i = 0;
+    int sgn = 1;
+    while(buf[i])
+    {
+        if(((buf[i] < '0') || (buf[i] > '9')) && (buf[i] != '.') && (buf[i] != '-'))
+        {
+            zf_abort(ZF_ABORT_NOT_A_WORD);
+            return 0;
+        }
+        if(buf[i] == '.')
+        {
+            if(nDiv != 1) 
+            {
+                zf_abort(ZF_ABORT_NOT_A_WORD);
+                return 0;                
+            }
+            nDiv = 10;
+        }
+        else if(buf[i] == '-')
+        {
+            if(i > 0)
+            {
+                zf_abort(ZF_ABORT_NOT_A_WORD);
+                return 0;                
+            }
+            sgn = -1;
+        }
+        else if(nDiv == 1)
+        {
+            var *= 10.0;
+            var += buf[i]-'0';
+        }
+        else
+        {
+            var += (double)(buf[i]-'0') / (double)nDiv;
+            nDiv *= 10;
+        }
+        i++;
+    }
+
+    return var * (zf_cell)sgn;
+}
 
 /*
  * Handle abort by unwinding the C stack and sending control back into
@@ -447,9 +503,14 @@ static void make_immediate(void)
  * Inner interpreter
  */
 
+ //This function has several modifications from Nick (PolyVinalDistillate) to allow it to support word-at-a-time execution
+int zf_nReRun = 0;				//Value indicates to zf_Main_Update_Fxn() what needs doing
+int zf_bEnableThrottle = 0;		//Flag is set in zf_eval(). If 0, then zForth behaves like unmodified original. If 1, then zForth will execute a single
+								//word and then return. Used in conjunction with zf_Main_Update_Fxn().
 static void run(const char *input)
 {
-	while(ip != 0) {
+	while(ip != 0) 
+    {
 		zf_cell d;
 		zf_addr i, ip_org = ip;
 		zf_addr l = dict_get_cell(ip, &d);
@@ -460,26 +521,42 @@ static void run(const char *input)
 		
 		ip += l;
 
-		if(code <= PRIM_COUNT) {
+		if(code <= PRIM_COUNT) 
+        {
 			do_prim((zf_prim)code, input);
 
-			/* If the prim requests input, restore IP so that the
-			 * next time around we call the same prim again */
+			// If the prim requests input, restore IP so that the
+			// next time around we call the same prim again
 
-			if(input_state != ZF_INPUT_INTERPRET) {
+			if(input_state != ZF_INPUT_INTERPRET) 
+            {
 				ip = ip_org;
+                
+                if((zf_bEnableThrottle)&&(input_state == ZF_INPUT_PASS_CHAR))
+                {
+                    zf_nReRun = 2;
+                    return;
+                }
 				break;
 			}
 
-		} else {
+		} 
+        else 
+        {
 			trace("%s/" ZF_ADDR_FMT " ", op_name(code), code);
 			zf_pushr(ip);
 			ip = code;
 		}
 
+        if(zf_bEnableThrottle)
+        {
+            if(ip) zf_nReRun = 1;
+            return;
+        }
 		input = NULL;
 	} 
 }
+
 
 
 /*
@@ -551,7 +628,7 @@ static void do_prim(zf_prim op, const char *input)
 			ip = zf_popr();
 			break;
 		
-		case PRIM_LEN:
+		case PRIM_LEN:      //(a l -- 
 			len = zf_pop();
 			addr = zf_pop();
 			zf_push(peek(addr, &d1, len));
@@ -687,9 +764,12 @@ static void do_prim(zf_prim op, const char *input)
 			break;
 
 		case PRIM_KEY:
-			if(input == NULL) {
+			if(input == NULL) 
+            {
 				input_state = ZF_INPUT_PASS_CHAR;
-			} else {
+			} 
+            else 
+            {
 				zf_push(input[0]);
 			}
 			break;
@@ -725,7 +805,8 @@ static void handle_word(const char *buf)
 	/* If a word was requested by an earlier operation, resume with the new
 	 * word */
 
-	if(input_state == ZF_INPUT_PASS_WORD) {
+	if(input_state == ZF_INPUT_PASS_WORD) 
+    {
 		input_state = ZF_INPUT_INTERPRET;
 		run(buf);
 		return;
@@ -735,7 +816,8 @@ static void handle_word(const char *buf)
 
 	found = find_word(buf, &w, &c);
 
-	if(found) {
+	if(found) 
+    {
 
 		/* Word found: compile or execute, depending on flags and state */
 
@@ -744,27 +826,38 @@ static void handle_word(const char *buf)
 		dict_get_cell(w, &d);
 		flags = d;
 
-		if(COMPILING && (POSTPONE || !(flags & ZF_FLAG_IMMEDIATE))) {
-			if(flags & ZF_FLAG_PRIM) {
+		if(COMPILING && (POSTPONE || !(flags & ZF_FLAG_IMMEDIATE))) 
+        {
+			if(flags & ZF_FLAG_PRIM) 
+            {
 				dict_get_cell(c, &d);
 				dict_add_op(d);
-			} else {
+			} 
+            else 
+            {
 				dict_add_op(c);
 			}
 			POSTPONE = 0;
-		} else {
+		}
+        else 
+        {
 			execute(c);
 		}
-	} else {
+	} 
+    else 
+    {
 
 		/* Word not found: try to convert to a number and compile or push, depending
 		 * on state */
 
 		zf_cell v = zf_host_parse_num(buf);
 
-		if(COMPILING) {
+		if(COMPILING) 
+        {
 			dict_add_lit(v);
-		} else {
+		} 
+        else 
+        {
 			zf_push(v);
 		}
 	}
@@ -775,27 +868,35 @@ static void handle_word(const char *buf)
  * Handle one character. Split into words to pass to handle_word(), or pass the
  * char to a deferred prim if it requested a character from the input stream
  */
-
+//Nick made one wee addition here - filter out NULL characters when input_state == ZF_INPUT_PASS_CHAR. Reason: avoid pesky NULLs
+//sneaking into strings beyond the 31 chars in the 32-byte buffer.
 static void handle_char(char c)
 {
 	static char buf[32];
 	static size_t len = 0;
 
-	if(input_state == ZF_INPUT_PASS_CHAR) {
-
+	if(input_state == ZF_INPUT_PASS_CHAR) 
+    {
+        if(c == '\0') return;               //Added by Nick (PolyVinalDistillate). Not sure yet if it's a good idea! 
 		input_state = ZF_INPUT_INTERPRET;
 		run(&c);
 
-	} else if(c != '\0' && !isspace(c)) {
+	} 
+    else if(c != '\0' && !isspace(c)) 
+    {
 
-		if(len < sizeof(buf)-1) {
+		if(len < sizeof(buf)-1) 
+        {
 			buf[len++] = c;
 			buf[len] = '\0';
 		}
 
-	} else {
+	} 
+    else 
+    {
 
-		if(len > 0) {
+		if(len > 0) 
+        {
 			len = 0;
 			handle_word(buf);
 		}
@@ -874,19 +975,118 @@ void zf_bootstrap(void) {}
  * Eval forth string
  */
 
-zf_result zf_eval(const char *buf)
+//Following was hacked-in by Nick (PolyVinalDistillate) to enable word-at-a-time execution
+char* zf_CurrentBuf = NULL;
+char zf_ShadowBuf[32];
+zf_result zf_ReRun()
 {
+    zf_result r = (zf_result)setjmp(jmpbuf);
+    if(r != ZF_OK)
+    {
+        zf_nReRun = 0;
+		COMPILING = 0;
+		rsp = 0;
+		dsp = 0;
+		return r;
+	}    
+    
+    if(zf_nReRun == 1)
+    {
+        zf_nReRun = 0;
+        if(ip != 0)
+        {
+            run(NULL);
+            if(zf_nReRun)
+            {
+                return ZF_NICKS_RERUN_FLAG;	
+            }
+            else
+            {
+                return ZF_OK;
+            }
+        }
+        else
+        {
+    		for(;;) 
+            {                              
+    			if(*zf_CurrentBuf == '\0') 
+                {
+    				return ZF_OK;
+                }
+                
+    			zf_CurrentBuf ++;
+                if((*zf_CurrentBuf >= 'A')&&(*zf_CurrentBuf <= 'Z'))            
+    			    handle_char(*zf_CurrentBuf+32);
+                else
+                    handle_char(*zf_CurrentBuf);
+                    
+                if(zf_nReRun)
+                {
+                    return ZF_NICKS_RERUN_FLAG;
+                }
+    		}
+        }
+    }
+    else if(zf_nReRun == 2)
+    {
+        zf_nReRun = 0;
+		for(;;) 
+        {                              
+			if(*zf_CurrentBuf == '\0') 
+            {
+				return ZF_OK;
+            }
+            
+			
+            zf_CurrentBuf ++;
+            
+            if((*zf_CurrentBuf >= 'A')&&(*zf_CurrentBuf <= 'Z'))            
+			    handle_char(*zf_CurrentBuf+32);
+            else
+                handle_char(*zf_CurrentBuf);
+            
+                
+            if(zf_nReRun)
+            {
+                return ZF_NICKS_RERUN_FLAG;
+            }
+		}
+    }
+    
+    return ZF_OK;    
+}
+
+//Modified by Nick (PolyVinalDistillate) to support word-at-a-time execution
+zf_result zf_eval(const char *buf, int bEnableThrottle)
+{
+    zf_bEnableThrottle = bEnableThrottle;
 	zf_result r = (zf_result)setjmp(jmpbuf);
 
-	if(r == ZF_OK) {
-		for(;;) {
-			handle_char(*buf);
-			if(*buf == '\0') {
+    if(r == ZF_OK) 
+    {
+		for(;;) 
+        {
+            if((*buf >= 'A')&&(*buf <= 'Z'))            
+			    handle_char(*buf+32);			//Case insensitivity added. everything is now lowercase. I got fed up with pasting code snippits 
+            else								//and getting errors!
+                handle_char(*buf);
+            
+            if((zf_nReRun)&&(bEnableThrottle))
+            {
+                strcpy(zf_ShadowBuf, buf);
+                zf_CurrentBuf = zf_ShadowBuf;
+                return ZF_OK;
+            }
+            
+			if(*buf == '\0') 
+            {
 				return ZF_OK;
 			}
 			buf ++;
 		}
-	} else {
+    }
+    else 
+    {
 		COMPILING = 0;
 		rsp = 0;
 		dsp = 0;
@@ -894,11 +1094,55 @@ zf_result zf_eval(const char *buf)
 	}
 }
 
-
 void *zf_dump(size_t *len)
 {
 	if(len) *len = sizeof(dict);
 	return dict;
+}
+
+//Added by Nick (PolyVinalDistillate) to wrap the evaluation functions in one little
+//function for repeated running
+zf_result zf_Main_Update_Fxn(unsigned char* pBuf, unsigned short* nLen)
+{
+	static uint8_t l = 0;
+    static char Build[32];
+    
+    unsigned short nIndex = 0;
+    zf_result rv = zf_ReRun();
+    if(rv != ZF_NICKS_RERUN_FLAG)
+    {
+        if(rv == ZF_OK) 
+        {
+            while(nIndex < *nLen)
+            {
+                unsigned char chr = pBuf[nIndex];
+                if(chr)
+                {
+                    if(chr == 10 || chr == 13 || chr == 32 || (l == sizeof(Build)-2)) 
+                    {
+                        Build[l++] = chr;
+                        Build[l] = '\0';
+                        *nLen = nIndex+1;
+                        if(l == sizeof(Build)-1)
+                            (*nLen) --;
+            			rv = zf_eval(Build, 1);
+            			l = 0;
+                        Build[l] = '\0';
+                        return rv;
+            		} 
+                    else if(l < sizeof(Build)-1) 
+                    {
+            			Build[l++] = chr;
+            		}
+                    Build[l] = '\0';
+                }
+                nIndex++;
+            }
+        }            
+        return rv;
+   }
+   *nLen = 0;
+   return ZF_OK;
 }
 
 /*

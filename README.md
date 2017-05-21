@@ -1,5 +1,6 @@
 
 ![zForth](/zforth.png)
+![zForth](/PVD.png)
 
 zForth
 ======
@@ -62,12 +63,12 @@ Some of zForth's highlights:
 
 Source layout
 =============
-
+(Changed a wee bit by PolyVinalDistillate)
 ```
-./forth         : core zforth library and various snippets and examples
-./src/zforth    : zfort core source; embed these into your program
-./src/linux     : example linux application
-./src/atmega8   : example AVR atmega8 application
+./forth                   : core zforth library and various snippets and examples
+./src/zforth              : zforth core source; embed these into your program
+./src/PSoC5 with USBUART  : CY8CKIT-059 PSoC Creator project using USBUART
+
 ```
 
 
@@ -80,46 +81,54 @@ forth statements from a file or terminal and pass the strings to `zf_eval()` to
 interpret, compile and run the code. Check the embedded documentation in
 `zforth.h` for details.
 
-A demo application for running zForth in linux is provided here, simply run `make`
-to build.
+---PolyVinalDistillate---
+The PSoC Example project initialises with the core.zf definitions which are
+stored in a const char in zForth.c. zForth can be interacted with via a terminal
+application connected to the USB UART.
 
-To start zForth and load the core forth code, run:
+The main modifications to the original source code are that zf_eval() now takes
+two parameters: "buf" (as before) containing Forth strings, and "bEnableThrottle"
+which is used to implement word-at-a-time execution. Setting "bEnableThrottle" to
+0 will cause zf_eval() to operate as if it were the original. Setting it to 1 will
+cause it to exit after the first iteration of the inner interpreter "run()" loop.
 
-````
-./src/linux/zfort forth/core.zf
-````
+DO NOT SET  bEnableThrottle to 1 manually!! It requires special handling when used
+""""""""""  in this mode. The new function zf_Main_Update_Fxn() implements the 
+            special handling required. Typical use case is shown below:
 
-And zForth will welcome you with the startup message:
+void main()
+{
+	zf_init(0);					//Standard init
+	zf_bootstrap();				//Standard bootstrap
+	zf_eval(ZF_CORE_STR, 0);	//Load core definitions from const string
+	
+    int nInputBytes = 0;
+    unsigned short nBytes = nInputBytes;
+    unsigned char pInputBuf[64];
+    unsigned char* pBufPos = pInputBuf;
+	for(;;) 
+    {        
+        
+        if(nInputBytes <= 0)                            //If there are no bytes...
+        {
+            nInputBytes = SOURCE_GetBytes(pInputBuf);   //Fill buffer from some source
+            pBufPos = pInputBuf;                        //Set buffer pointer to start
+        }
+        
+        nBytes = nInputBytes;                                  //Bytes available
+        zf_result r = zf_Main_Update_Fxn(pBufPos, &nBytes);    //Feed data to zForth.
+        nInputBytes -= nBytes;                                 //Bytes used subtracted
+        pBufPos += nBytes;                                     //Buf position updated
 
-````
-Welcome to zForth, 786 bytes used
-````
-
-zForth is now ready to use. Try some of the following:
-
-Adding one and one or calculate the 144 squared:
-
-````
-1 1 + .
-144 dup * .
-````
-
-Print the sine of 10 numbers between 0 and PI
-
-````
-: pi 3.141592654 ;
-: demo pi 0 do i sin . pi 10 / loop+ ;
-demo
-````
-
-Load and run the demo Mandelbrot fractal:
-
-````
-include forth/mandel.zf
-````
-
-
-Tracing
+        switch(r)  //Switch on return conditions - indicates Forth errors encountered
+        {
+        }
+        /*
+        Perform other system functions unrelated to Forth
+        */
+    }		
+}
+Tracing (not implemented in the PSoC example)
 =======
 
 zForth can write verbose traces of the code it is compiling and running. To enable
