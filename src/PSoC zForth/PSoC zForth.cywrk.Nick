@@ -93,6 +93,16 @@
 <VisibleNodeIds>
 <v>PSoC zForth</v>
 <v>PSoC zForth\PSoC zForth</v>
+<v>PSoC zForth\PSoC zForth\CortexM3</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\Listing Files</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\Listing Files\main.lst</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\Listing Files\zforth.lst</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\PSoC zForth.elf</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\PSoC zForth.hex</v>
+<v>PSoC zForth\PSoC zForth\CortexM3\ARM_GCC_493\Debug\PSoC zForth.map</v>
+<v>PSoC zForth\PSoC zForth\PSoC zForth.gpdsc</v>
 <v>PSoC zForth\PSoC zForth\PSoC zForth.rpt</v>
 <v>PSoC zForth\PSoC zForth\PSoC zForth_timing.html</v>
 </VisibleNodeIds>
@@ -102,7 +112,7 @@
 <v>Datasheet</v>
 </TreeKeysV2>
 <TreeStatesV2>
-<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="">
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="PSoC zForth">
 <ExpandedNodeIds>
 <v>PSoC zForth</v>
 <v>PSoC zForth\PSoC zForth</v>
@@ -112,6 +122,7 @@
 <v>PSoC zForth\PSoC zForth\System Reference Guides\cy_boot_v5_50</v>
 <v>PSoC zForth\PSoC zForth\cy_clock_v2_20.pdf</v>
 <v>PSoC zForth\PSoC zForth\cy_isr_v1_70.pdf</v>
+<v>PSoC zForth\PSoC zForth\cy_pins_v2_20.pdf</v>
 <v>PSoC zForth\PSoC zForth\USBFS_v3_10.pdf</v>
 </ExpandedNodeIds>
 <VisibleNodeIds>
@@ -123,6 +134,7 @@
 <v>PSoC zForth\PSoC zForth\System Reference Guides\cy_boot_v5_50</v>
 <v>PSoC zForth\PSoC zForth\cy_clock_v2_20.pdf</v>
 <v>PSoC zForth\PSoC zForth\cy_isr_v1_70.pdf</v>
+<v>PSoC zForth\PSoC zForth\cy_pins_v2_20.pdf</v>
 <v>PSoC zForth\PSoC zForth\USBFS_v3_10.pdf</v>
 </VisibleNodeIds>
 </CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>

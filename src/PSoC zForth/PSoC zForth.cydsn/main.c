@@ -172,6 +172,10 @@ int main()
 		Other system code can go in here
 		*/
         
+        //e.g. Busy flag indicator...
+        if(zf_Busy()) LED_Write(0xFF);
+        else LED_Write(0x00);
+        
 	}
 }
 

@@ -1145,6 +1145,11 @@ zf_result zf_Main_Update_Fxn(unsigned char* pBuf, unsigned short* nLen)
    return ZF_OK;
 }
 
+inline int zf_Busy()
+{
+    if(zf_nReRun) return 1;
+    return 0;
+}
 /*
  * End
  */

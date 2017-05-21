@@ -54,6 +54,9 @@ typedef enum {
 //pointer.
 zf_result zf_Main_Update_Fxn(unsigned char* pBuf, unsigned short* nLen);
 
+//True if busy executing
+inline int zf_Busy();
+
 
 //Modified by Nick(PolyVinalDistillate). If bEnableThrottle = 0, then zf_eval will not exit until entire input processed. NOTE: This includes 
 //forth loops! If bEnableThrottle = 1, then function will exit once first word is processed. subsequently, zf_ReRun() should be called repeatedly 
