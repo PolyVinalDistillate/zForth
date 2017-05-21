@@ -87,14 +87,14 @@ The PSoC Example project initialises with the core.zf definitions which are
 stored in a const char in zForth.c. zForth can be interacted with via a terminal
 application connected to the USB UART.
 
-The main modifications to the original source code are that zf_eval() now takes
-two parameters: "buf" (as before) containing Forth strings, and "bEnableThrottle"
-which is used to implement word-at-a-time execution. Setting "bEnableThrottle" to
-0 will cause zf_eval() to operate as if it were the original. Setting it to 1 will
-cause it to exit after the first iteration of the inner interpreter "run()" loop.
+The main modifications to the original source code are that `zf_eval()` now takes
+two parameters: `buf` (as before) containing Forth strings, and `bEnableThrottle`
+which is used to implement word-at-a-time execution. Setting `bEnableThrottle` to
+`0` will cause `zf_eval()` to operate as if it were the original. Setting it to `1` 
+will cause it to exit after the first iteration of the inner interpreter `run()` loop.
 
-DO NOT SET  bEnableThrottle to 1 manually!! It requires special handling when used
-in this mode. The new function zf_Main_Update_Fxn() implements the special handling 
+DO NOT SET  `bEnableThrottle` to `1` manually!! It requires special handling when used
+in this mode. The new function `zf_Main_Update_Fxn()` implements the special handling 
 required. Typical use case is shown below:
 
 ```
