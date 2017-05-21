@@ -82,6 +82,7 @@ interpret, compile and run the code. Check the embedded documentation in
 `zforth.h` for details.
 
 ---PolyVinalDistillate---
+
 The PSoC Example project initialises with the core.zf definitions which are
 stored in a const char in zForth.c. zForth can be interacted with via a terminal
 application connected to the USB UART.
@@ -93,9 +94,10 @@ which is used to implement word-at-a-time execution. Setting "bEnableThrottle" t
 cause it to exit after the first iteration of the inner interpreter "run()" loop.
 
 DO NOT SET  bEnableThrottle to 1 manually!! It requires special handling when used
-""""""""""  in this mode. The new function zf_Main_Update_Fxn() implements the 
-            special handling required. Typical use case is shown below:
+in this mode. The new function zf_Main_Update_Fxn() implements the special handling 
+required. Typical use case is shown below:
 
+```
 void main()
 {
 	zf_init(0);					//Standard init
@@ -128,6 +130,8 @@ void main()
         */
     }		
 }
+```
+
 Tracing (not implemented in the PSoC example)
 =======
 
