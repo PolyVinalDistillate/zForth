@@ -212,11 +212,13 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
                 
                 double v_dp = i - (long)i;
                 long v_wn = i-v_dp;
+                int bLeading = 0;
                 
                 while((v_dp != 0) || (v_wn != 0))
                 {
-                    if(v_wn != 0)
+                    if((v_wn != 0)||(bLeading == 0))
                     {
+                        bLeading = 1;
                         long tmp = v_wn % 10;
                         v_wn /= 10;
                         buf[nIndex] = tmp+'0';

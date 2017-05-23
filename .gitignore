@@ -32,3 +32,4 @@ zforth.save
 
 # Debug files
 *.dSYM/
+*.Nick
