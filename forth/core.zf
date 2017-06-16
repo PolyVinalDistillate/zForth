@@ -4,11 +4,6 @@
 : emit    0 sys ;
 : .       1 sys ;
 : tell    2 sys ;
-: quit    128 sys ;
-: sin     129 sys ;
-: include 130 sys ;
-: save    131 sys ;
-
 
 ( dictionary access. These are shortcuts through the primitive operations are !!, @@ and ,, )
 
